@@ -1,20 +1,20 @@
 "use server";
 
-import { ID, Query } from "node-appwrite";
-import { createAdminClient, createSessionClient } from "../appwrite";
-import { appWriteConfig } from "../appwrite/config";
-import { parseStringify } from "../utils";
+import { createAdminClient, createSessionClient } from "@/lib/appwrite";
+import { appwriteConfig } from "@/lib/appwrite/config";
+import { Query, ID } from "node-appwrite";
+import { parseStringify } from "@/lib/utils";
 import { cookies } from "next/headers";
+import { avatarPlaceholderUrl } from "@/constants";
 import { redirect } from "next/navigation";
-
-// creating account flow
 
 const getUserByEmail = async (email: string) => {
   const { databases } = await createAdminClient();
+
   const result = await databases.listDocuments(
-    appWriteConfig.databaseId,
-    appWriteConfig.userCollectionId,
-    [Query.equal("email", [email])]
+    appwriteConfig.databaseId,
+    appwriteConfig.usersCollectionId,
+    [Query.equal("email", [email])],
   );
 
   return result.total > 0 ? result.documents[0] : null;
@@ -53,21 +53,20 @@ export const createAccount = async ({
     const { databases } = await createAdminClient();
 
     await databases.createDocument(
-      appWriteConfig.databaseId,
-      appWriteConfig.userCollectionId,
+      appwriteConfig.databaseId,
+      appwriteConfig.usersCollectionId,
       ID.unique(),
       {
         fullName,
         email,
-        avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZw4HYx8PHlE8ZniW1hqck5nZeKaYZSqG56g&s',
+        avatar: avatarPlaceholderUrl,
         accountId,
-      }
+      },
     );
   }
 
   return parseStringify({ accountId });
 };
-
 
 export const verifySecret = async ({
   accountId,
@@ -101,8 +100,8 @@ export const getCurrentUser = async () => {
     const result = await account.get();
 
     const user = await databases.listDocuments(
-        appWriteConfig.databaseId,
-        appWriteConfig.userCollectionId,
+      appwriteConfig.databaseId,
+      appwriteConfig.usersCollectionId,
       [Query.equal("accountId", result.$id)],
     );
 
